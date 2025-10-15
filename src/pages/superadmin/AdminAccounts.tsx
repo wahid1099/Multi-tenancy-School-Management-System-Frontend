@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
-import { Input } from '../../components/ui/Input';
-import { Badge } from '../../components/ui/Badge';
-import { Breadcrumb } from '../../components/layout/Breadcrumb';
-import { Table } from '../../components/ui/Table';
-import { Plus, Search } from 'lucide-react';
+import React, { useState } from "react";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Modal } from "../../components/ui/Modal";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { Breadcrumb } from "../../components/layout/Breadcrumb";
+import { Table } from "../../components/ui/Table";
+import { Plus, Search } from "lucide-react";
 
 export const AdminAccounts: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -14,51 +14,51 @@ export const AdminAccounts: React.FC = () => {
   const admins = [
     {
       id: 1,
-      name: 'John Smith',
-      email: 'john.smith@lincoln.edu',
-      school: 'Lincoln High School',
-      role: 'School Admin',
-      status: 'active',
-      lastLogin: '2025-09-28',
+      name: "John Smith",
+      email: "john.smith@lincoln.edu",
+      school: "Lincoln High School",
+      role: "School Admin",
+      status: "active",
+      lastLogin: "2025-09-28",
     },
     {
       id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@washington.edu',
-      school: 'Washington Academy',
-      role: 'School Admin',
-      status: 'active',
-      lastLogin: '2025-09-27',
+      name: "Sarah Johnson",
+      email: "sarah.j@washington.edu",
+      school: "Washington Academy",
+      role: "School Admin",
+      status: "active",
+      lastLogin: "2025-09-27",
     },
     {
       id: 3,
-      name: 'Michael Brown',
-      email: 'michael.b@jefferson.edu',
-      school: 'Jefferson Institute',
-      role: 'School Admin',
-      status: 'active',
-      lastLogin: '2025-09-28',
+      name: "Michael Brown",
+      email: "michael.b@jefferson.edu",
+      school: "Jefferson Institute",
+      role: "School Admin",
+      status: "active",
+      lastLogin: "2025-09-28",
     },
   ];
 
   const columns = [
-    { key: 'name', header: 'Name' },
-    { key: 'email', header: 'Email' },
-    { key: 'school', header: 'School' },
-    { key: 'role', header: 'Role' },
+    { key: "name", header: "Name" },
+    { key: "email", header: "Email" },
+    { key: "school", header: "School" },
+    { key: "role", header: "Role" },
     {
-      key: 'status',
-      header: 'Status',
+      key: "status",
+      header: "Status",
       render: (value: string) => (
-        <Badge variant={value === 'active' ? 'success' : 'danger'}>
+        <Badge variant={value === "active" ? "success" : "danger"}>
           {value}
         </Badge>
       ),
     },
-    { key: 'lastLogin', header: 'Last Login' },
+    { key: "lastLogin", header: "Last Login" },
     {
-      key: 'actions',
-      header: 'Actions',
+      key: "actions",
+      header: "Actions",
       render: () => (
         <div className="flex space-x-2">
           <Button size="sm" variant="outline">
@@ -74,10 +74,17 @@ export const AdminAccounts: React.FC = () => {
 
   return (
     <div>
-      <Breadcrumb items={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Admin Accounts' }]} />
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", path: "/dashboard" },
+          { label: "Admin Accounts" },
+        ]}
+      />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Account Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Admin Account Management
+        </h1>
 
         <div className="flex items-center space-x-3">
           <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2">
@@ -98,8 +105,12 @@ export const AdminAccounts: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Admins</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">24</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Total Admins
+            </p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              24
+            </p>
           </div>
         </Card>
 
@@ -112,14 +123,18 @@ export const AdminAccounts: React.FC = () => {
 
         <Card>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Suspended</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Suspended
+            </p>
             <p className="text-2xl font-bold text-red-600">2</p>
           </div>
         </Card>
 
         <Card>
           <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">New This Month</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              New This Month
+            </p>
             <p className="text-2xl font-bold text-indigo-600">3</p>
           </div>
         </Card>
