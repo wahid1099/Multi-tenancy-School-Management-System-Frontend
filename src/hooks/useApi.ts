@@ -421,7 +421,7 @@ export const useApi = () => {
   );
 
   const createExam = useCallback(
-    async (examData: any) => {
+    async (examData: unknown) => {
       try {
         const response = await apiService.createExam(examData);
         dispatch({ type: "ADD_EXAM", payload: response.data });
@@ -436,7 +436,7 @@ export const useApi = () => {
   );
 
   const updateExam = useCallback(
-    async (id: string, examData: any) => {
+    async (id: string, examData: unknown) => {
       try {
         const response = await apiService.updateExam(id, examData);
         dispatch({ type: "UPDATE_EXAM", payload: response.data });
@@ -465,13 +465,13 @@ export const useApi = () => {
   );
 
   // Dashboard
-  const fetchDashboardStats = useCallback(async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       dispatch({
         type: "SET_LOADING",
         payload: { key: "dashboard", value: true },
       });
-      const response = await apiService.getDashboardStats();
+      const response = await apiService.getDashboard();
       dispatch({ type: "SET_DASHBOARD_STATS", payload: response.data });
     } catch (error) {
       handleError(error);
@@ -517,6 +517,6 @@ export const useApi = () => {
     updateExam,
     deleteExam,
     // Dashboard
-    fetchDashboardStats,
+    fetchDashboard,
   };
 };

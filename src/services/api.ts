@@ -17,8 +17,8 @@ import {
 } from "../types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1";
-
+  import.meta.env.VITE_API_URL ||
+  "https://multi-tenancy-school-management-sys.vercel.app/api/v1";
 class ApiService {
   private getHeaders(): HeadersInit {
     const token = localStorage.getItem("token");
@@ -348,7 +348,7 @@ class ApiService {
 
   // Timetables
   async getTimetables(
-    params?: Record<string, any>
+    params?: Record<string, unknown>
   ): Promise<PaginatedResponse<Timetable>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
@@ -409,8 +409,109 @@ class ApiService {
   }
 
   // Dashboard
-  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    return this.request("/dashboard/stats");
+  async getDashboard(): Promise<ApiResponse<any>> {
+    return this.request("/dashboard");
+  }
+
+  // Role Management
+  async getAvailableRoles(): Promise<ApiResponse<{ roles: string[] }>> {
+    return this.request("/users/available-roles");
+  }
+
+  async getMyCreatedUsers(): Promise<ApiResponse<User[]>> {
+    return this.request("/users/my-created-users");
+  }
+
+  async getRoleHierarchy(): Promise<ApiResponse<any>> {
+    return this.request("/users/role-hierarchy");
+  }
+
+  async bulkCreateUsers(users: any[]): Promise<ApiResponse<any>> {
+    return this.request("/users/bulk-create", {
+      method: "POST",
+      body: JSON.stringify({ users }),
+    });
+  }
+
+  async updateUserRole(
+    userId: string,
+    role: string
+  ): Promise<ApiResponse<User>> {
+    return this.request(`/users/${userId}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  // Audit Management
+  async getAuditLogs(params?: Record<string, any>): Promise<ApiResponse<any>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/audit/logs${queryString}`);
+  }
+
+  async getAuditStats(params?: Record<string, any>): Promise<ApiResponse<any>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/audit/stats${queryString}`);
+  }
+
+  async exportAuditLogs(params?: Record<string, any>): Promise<any> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/audit/export${queryString}`, {
+      method: "GET",
+    });
+  }
+
+  async getCriticalEvents(
+    params?: Record<string, any>
+  ): Promise<ApiResponse<any>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/audit/critical${queryString}`);
+  }
+
+  async getUserActivity(
+    userId: string,
+    params?: Record<string, any>
+  ): Promise<ApiResponse<any>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/audit/user-activity/${userId}${queryString}`);
+  }
+
+  // Generic API methods
+  async get(endpoint: string, params?: Record<string, any>): Promise<any> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`${endpoint}${queryString}`);
+  }
+
+  async post(endpoint: string, data?: unknown): Promise<unknown> {
+    return this.request(endpoint, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async patch(endpoint: string, data?: unknown): Promise<unknown> {
+    return this.request(endpoint, {
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async delete(endpoint: string): Promise<unknown> {
+    return this.request(endpoint, {
+      method: "DELETE",
+    });
   }
 }
 

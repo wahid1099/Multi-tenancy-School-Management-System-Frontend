@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole, LoginForm } from "../types";
+import { User, LoginForm } from "../types";
 import { apiService } from "../services/api";
 
 interface AuthContextType {
@@ -7,7 +7,6 @@ interface AuthContextType {
   loading: boolean;
   signIn: (credentials: LoginForm) => Promise<void>;
   signOut: () => Promise<void>;
-  switchRole: (role: UserRole) => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   changePassword: (
     currentPassword: string,
@@ -79,23 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const switchRole = (role: UserRole) => {
-    // Demo mode - create mock user for different roles
-    const demoUser: User = {
-      _id: `${role}-demo`,
-      email: `${role}@demo.com`,
-      firstName: role.charAt(0).toUpperCase() + role.slice(1).replace("_", " "),
-      lastName: "Demo",
-      role,
-      tenant: "demo-school",
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setUser(demoUser);
-    localStorage.setItem("tenant", "demo-school");
-  };
-
   const updateProfile = async (userData: Partial<User>) => {
     if (!user) throw new Error("No user logged in");
 
@@ -127,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         signIn,
         signOut,
-        switchRole,
         updateProfile,
         changePassword,
       }}

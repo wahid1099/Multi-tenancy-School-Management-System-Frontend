@@ -17,10 +17,18 @@ import {
   LogOut,
   Menu,
   X,
+  Shield,
+  Activity,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApp } from "../../contexts/AppContext";
 import { UserRole } from "../../types";
+import {
+  hasRequiredRole,
+  getRoleDisplayName,
+  getRoleColor,
+} from "../../utils/roleUtils";
 
 interface MenuItem {
   path: string;
@@ -34,73 +42,144 @@ const menuItems: MenuItem[] = [
     path: "/dashboard",
     label: "Dashboard",
     icon: <Home className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher", "student", "parent"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "teacher",
+      "student",
+      "parent",
+    ],
   },
   {
-    path: "/tenants",
-    label: "Tenants",
-    icon: <Building className="w-5 h-5" />,
-    roles: ["admin"],
+    path: "/analytics",
+    label: "Analytics",
+    icon: <BarChart3 className="w-5 h-5" />,
+    roles: ["super_admin", "manager", "admin", "tenant_admin"],
   },
+  // System Administration (Super Admin & Manager only)
+  {
+    path: "/system/tenants",
+    label: "Tenant Management",
+    icon: <Building className="w-5 h-5" />,
+    roles: ["super_admin", "manager"],
+  },
+  {
+    path: "/system/users",
+    label: "System Users",
+    icon: <Shield className="w-5 h-5" />,
+    roles: ["super_admin", "manager"],
+  },
+  {
+    path: "/system/audit",
+    label: "Audit Logs",
+    icon: <Activity className="w-5 h-5" />,
+    roles: ["super_admin", "manager"],
+  },
+  // User Management
   {
     path: "/users",
-    label: "Users",
+    label: "User Management",
     icon: <Users className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin"],
+    roles: ["super_admin", "manager", "admin", "tenant_admin"],
   },
+  {
+    path: "/users/create",
+    label: "Create User",
+    icon: <UserPlus className="w-5 h-5" />,
+    roles: ["super_admin", "manager", "admin", "tenant_admin"],
+  },
+  // Academic Management
   {
     path: "/subjects",
     label: "Subjects",
     icon: <BookOpen className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher"],
+    roles: ["super_admin", "manager", "admin", "tenant_admin", "teacher"],
   },
   {
     path: "/classes",
     label: "Classes",
     icon: <GraduationCap className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher"],
+    roles: ["super_admin", "manager", "admin", "tenant_admin", "teacher"],
   },
   {
     path: "/students",
     label: "Students",
     icon: <Users className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher"],
+    roles: ["super_admin", "manager", "admin", "tenant_admin", "teacher"],
   },
   {
     path: "/attendance",
     label: "Attendance",
     icon: <UserCheck className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher", "student"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "teacher",
+      "student",
+    ],
   },
   {
     path: "/exams",
     label: "Exams",
     icon: <FileText className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher", "student"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "teacher",
+      "student",
+    ],
   },
   {
     path: "/grades",
     label: "Grades",
     icon: <Trophy className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher", "student", "parent"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "teacher",
+      "student",
+      "parent",
+    ],
   },
   {
     path: "/timetables",
     label: "Timetables",
     icon: <Clock className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher", "student"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "teacher",
+      "student",
+    ],
   },
   {
     path: "/fees",
     label: "Fees",
     icon: <DollarSign className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "student", "parent"],
+    roles: [
+      "super_admin",
+      "manager",
+      "admin",
+      "tenant_admin",
+      "student",
+      "parent",
+    ],
   },
   {
     path: "/reports",
     label: "Reports",
     icon: <BarChart3 className="w-5 h-5" />,
-    roles: ["admin", "tenant_admin", "teacher"],
+    roles: ["super_admin", "manager", "admin", "tenant_admin", "teacher"],
   },
 ];
 
@@ -108,9 +187,12 @@ export const Sidebar: React.FC = () => {
   const { user, signOut } = useAuth();
   const { state, dispatch } = useApp();
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => user && item.roles.includes(user.role)
-  );
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!user) return false;
+
+    // Check if user has any of the required roles or higher
+    return item.roles.some((role) => hasRequiredRole(user, role));
+  });
 
   const toggleSidebar = () => {
     dispatch({ type: "TOGGLE_SIDEBAR" });
@@ -168,13 +250,24 @@ export const Sidebar: React.FC = () => {
                   {user.lastName.charAt(0)}
                 </span>
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {user.role.replace("_", " ")}
-                </p>
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getRoleColor(
+                      user.role
+                    )}`}
+                  >
+                    {getRoleDisplayName(user.role)}
+                  </span>
+                </div>
+                {user.roleScope !== "tenant" && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Scope: {user.roleScope}
+                  </p>
+                )}
               </div>
             </div>
           </div>

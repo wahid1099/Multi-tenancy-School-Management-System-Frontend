@@ -5,6 +5,11 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  roleLevel: number;
+  createdBy?: string;
+  managedTenants: string[];
+  permissions: Permission[];
+  roleScope: "global" | "tenant" | "limited";
   tenant: string;
   isActive: boolean;
   lastLogin?: Date;
@@ -12,7 +17,30 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface Permission {
+  resource: string;
+  actions: string[];
+  scope: "global" | "tenant" | "own";
+  conditions?: Record<string, any>;
+}
+
+export interface AuditLog {
+  _id: string;
+  actor: string;
+  action: string;
+  target?: string;
+  resource?: string;
+  details: Record<string, unknown>;
+  tenant: string;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: Date;
+  severity: "low" | "medium" | "high" | "critical";
+}
+
 export type UserRole =
+  | "super_admin"
+  | "manager"
   | "admin"
   | "tenant_admin"
   | "teacher"
@@ -177,14 +205,53 @@ export interface PaginatedResponse<T> {
 
 // Dashboard Types
 export interface DashboardStats {
-  totalStudents: number;
-  totalTeachers: number;
-  totalClasses: number;
-  totalSubjects: number;
-  attendanceRate: number;
-  feeCollection: number;
-  upcomingExams: number;
-  recentActivities: Activity[];
+  overview?: {
+    totalStudents: number;
+    totalTeachers: number;
+    totalClasses: number;
+    totalSubjects: number;
+    myClasses?: number;
+    mySubjects?: number;
+    attendanceRate?: number;
+    averageGrade?: string;
+  };
+  attendance?: {
+    todayAttendance: number;
+    weeklyAttendance: number;
+    monthlyAttendance: number;
+  };
+  academics?: {
+    upcomingExams: number;
+    pendingGrades: number;
+    activeExams: number;
+  };
+  fees?: {
+    totalCollected: number;
+    totalPending: number;
+    collectionRate: number;
+    overdueCount: number;
+  };
+  tenantStats?: {
+    totalUsers: number;
+    activeUsers: number;
+    newRegistrations: number;
+  };
+  systemHealth?: {
+    uptime: number;
+    memoryUsage: number;
+    activeConnections: number;
+  };
+  recentActivities?: Activity[];
+  todaySchedule?: any[];
+  upcomingExams?: any[];
+  pendingGrades?: any[];
+  recentAttendance?: any[];
+  recentGrades?: unknown[];
+  feeStatus?: {
+    totalDue: number;
+    overdue: number;
+    nextDueDate: Date | null;
+  };
 }
 
 export interface Activity {
@@ -193,6 +260,34 @@ export interface Activity {
   description: string;
   user: string;
   timestamp: Date;
+}
+
+// Role Management Types
+export interface CreateUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  tenant?: string;
+  managedTenants?: string[];
+}
+
+export interface RoleHierarchy {
+  role: UserRole;
+  level: number;
+  canCreate: UserRole[];
+  permissions: Permission[];
+}
+
+export interface AuditFilters {
+  startDate?: Date;
+  endDate?: Date;
+  actor?: string;
+  action?: string;
+  resource?: string;
+  tenant?: string;
+  severity?: "low" | "medium" | "high" | "critical";
 }
 
 // Form Types

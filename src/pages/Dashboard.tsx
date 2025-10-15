@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   GraduationCap,
@@ -8,6 +8,9 @@ import {
   Calendar,
   DollarSign,
   Award,
+  Building,
+  Activity,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useApi } from "../hooks/useApi";
@@ -31,7 +34,7 @@ const StatCard: React.FC<StatCardProps> = ({
   color,
   trend,
 }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -58,69 +61,187 @@ const StatCard: React.FC<StatCardProps> = ({
   </div>
 );
 
+interface ActivityCardProps {
+  title: string;
+  items: any[];
+  emptyMessage: string;
+  renderItem: (item: any, index: number) => React.ReactNode;
+}
+
+const ActivityCard: React.FC<ActivityCardProps> = ({
+  title,
+  items,
+  emptyMessage,
+  renderItem,
+}) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      {title}
+    </h3>
+    <div className="space-y-3">
+      {items && items.length > 0 ? (
+        items.slice(0, 5).map(renderItem)
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {emptyMessage}
+        </p>
+      )}
+    </div>
+  </div>
+);
+
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  // Safely get user with error handling
+  let user = null;
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+  } catch (error) {
+    console.error("Auth context not available in Dashboard:", error);
+    user = null;
+  }
+
   const { state } = useApp();
-  const { fetchDashboardStats } = useApi();
+  const { fetchDashboard } = useApi();
 
   useEffect(() => {
-    fetchDashboardStats();
-  }, [fetchDashboardStats]);
+    const loadDashboard = async () => {
+      if (fetchDashboard) {
+        setLoading(true);
+        try {
+          await fetchDashboard();
+        } catch (error) {
+          console.error("Failed to load dashboard:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
 
-  const stats = state.dashboardStats;
+    loadDashboard();
+  }, [fetchDashboard]);
+
+  const dashboardData = state.dashboardStats;
 
   const getStatsForRole = () => {
-    if (!stats) return [];
+    if (!dashboardData) return [];
 
-    const baseStats = [
-      {
-        title: "Total Students",
-        value: stats.totalStudents || 0,
-        icon: <Users className="w-6 h-6 text-white" />,
-        color: "bg-blue-500",
-        trend: { value: 12, isPositive: true },
-      },
-      {
-        title: "Total Classes",
-        value: stats.totalClasses || 0,
-        icon: <GraduationCap className="w-6 h-6 text-white" />,
-        color: "bg-green-500",
-        trend: { value: 5, isPositive: true },
-      },
-      {
-        title: "Total Subjects",
-        value: stats.totalSubjects || 0,
-        icon: <BookOpen className="w-6 h-6 text-white" />,
-        color: "bg-purple-500",
-      },
-      {
-        title: "Attendance Rate",
-        value: `${stats.attendanceRate || 0}%`,
-        icon: <UserCheck className="w-6 h-6 text-white" />,
-        color: "bg-yellow-500",
-        trend: { value: 3, isPositive: true },
-      },
-    ];
+    const role = user?.role;
 
-    if (user?.role === "admin" || user?.role === "tenant_admin") {
-      baseStats.push(
+    if (role === "admin" || role === "tenant_admin") {
+      return [
+        {
+          title: "Total Students",
+          value: dashboardData.overview?.totalStudents || 0,
+          icon: <Users className="w-6 h-6 text-white" />,
+          color: "bg-blue-500",
+        },
         {
           title: "Total Teachers",
-          value: stats.totalTeachers || 0,
-          icon: <Users className="w-6 h-6 text-white" />,
+          value: dashboardData.overview?.totalTeachers || 0,
+          icon: <GraduationCap className="w-6 h-6 text-white" />,
+          color: "bg-green-500",
+        },
+        {
+          title: "Total Classes",
+          value: dashboardData.overview?.totalClasses || 0,
+          icon: <Building className="w-6 h-6 text-white" />,
+          color: "bg-purple-500",
+        },
+        {
+          title: "Total Subjects",
+          value: dashboardData.overview?.totalSubjects || 0,
+          icon: <BookOpen className="w-6 h-6 text-white" />,
           color: "bg-indigo-500",
         },
         {
-          title: "Fee Collection",
-          value: `$${stats.feeCollection || 0}`,
+          title: "Today's Attendance",
+          value: `${Math.round(
+            dashboardData.attendance?.todayAttendance || 0
+          )}%`,
+          icon: <UserCheck className="w-6 h-6 text-white" />,
+          color: "bg-yellow-500",
+        },
+        {
+          title: "Fee Collection Rate",
+          value: `${Math.round(dashboardData.fees?.collectionRate || 0)}%`,
           icon: <DollarSign className="w-6 h-6 text-white" />,
           color: "bg-green-600",
-          trend: { value: 8, isPositive: true },
-        }
-      );
+        },
+        {
+          title: "Upcoming Exams",
+          value: dashboardData.academics?.upcomingExams || 0,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          color: "bg-red-500",
+        },
+        {
+          title: "Active Users",
+          value: dashboardData.tenantStats?.activeUsers || 0,
+          icon: <Activity className="w-6 h-6 text-white" />,
+          color: "bg-teal-500",
+        },
+      ];
+    } else if (role === "teacher") {
+      return [
+        {
+          title: "My Classes",
+          value: dashboardData.overview?.myClasses || 0,
+          icon: <Building className="w-6 h-6 text-white" />,
+          color: "bg-blue-500",
+        },
+        {
+          title: "My Subjects",
+          value: dashboardData.overview?.mySubjects || 0,
+          icon: <BookOpen className="w-6 h-6 text-white" />,
+          color: "bg-green-500",
+        },
+        {
+          title: "Total Students",
+          value: dashboardData.overview?.totalStudents || 0,
+          icon: <Users className="w-6 h-6 text-white" />,
+          color: "bg-purple-500",
+        },
+        {
+          title: "Pending Grades",
+          value: dashboardData.pendingGrades?.length || 0,
+          icon: <Award className="w-6 h-6 text-white" />,
+          color: "bg-yellow-500",
+        },
+      ];
+    } else if (role === "student") {
+      return [
+        {
+          title: "My Subjects",
+          value: dashboardData.overview?.mySubjects || 0,
+          icon: <BookOpen className="w-6 h-6 text-white" />,
+          color: "bg-blue-500",
+        },
+        {
+          title: "Attendance Rate",
+          value: `${dashboardData.overview?.attendanceRate || 0}%`,
+          icon: <UserCheck className="w-6 h-6 text-white" />,
+          color: "bg-green-500",
+        },
+        {
+          title: "Average Grade",
+          value: dashboardData.overview?.averageGrade || "N/A",
+          icon: <Award className="w-6 h-6 text-white" />,
+          color: "bg-purple-500",
+        },
+        {
+          title: "Fees Due",
+          value: `$${dashboardData.feeStatus?.totalDue || 0}`,
+          icon: <DollarSign className="w-6 h-6 text-white" />,
+          color: "bg-red-500",
+        },
+      ];
     }
 
-    return baseStats;
+    return [];
   };
 
   const getWelcomeMessage = () => {
@@ -131,206 +252,195 @@ export const Dashboard: React.FC = () => {
         : hour < 18
         ? "Good afternoon"
         : "Good evening";
-    return `${greeting}, ${user?.firstName}!`;
+    return `${greeting}, ${user?.firstName || "User"}!`;
   };
 
   const getRoleSpecificContent = () => {
-    switch (user?.role) {
-      case "admin":
-      case "tenant_admin":
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Activities
-              </h3>
-              <div className="space-y-3">
-                {stats?.recentActivities?.slice(0, 5).map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {activity.description}
-                    </p>
-                  </div>
-                )) || (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    No recent activities
+    const role = user?.role;
+
+    if (role === "admin" || role === "tenant_admin") {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ActivityCard
+            title="Recent Activities"
+            items={dashboardData?.recentActivities || []}
+            emptyMessage="No recent activities"
+            renderItem={(activity: any, index: number) => (
+              <div key={index} className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {activity.message}
                   </p>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Upcoming Events
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      Parent-Teacher Meeting
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Tomorrow, 2:00 PM
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Award className="w-5 h-5 text-green-500" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      Annual Sports Day
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Next Friday, 9:00 AM
-                    </p>
-                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                    {new Date(activity.timestamp).toLocaleString()}
+                  </p>
                 </div>
               </div>
-            </div>
-          </div>
-        );
+            )}
+          />
 
-      case "teacher":
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Today's Classes
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Mathematics
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Grade 10-A
-                    </p>
-                  </div>
-                  <span className="text-sm text-blue-600 dark:text-blue-400">
-                    9:00 AM
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Physics
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Grade 11-B
-                    </p>
-                  </div>
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    11:00 AM
-                  </span>
-                </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              System Health
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Uptime
+                </span>
+                <span className="text-sm font-medium text-green-600">
+                  {Math.round(
+                    (dashboardData?.systemHealth?.uptime || 0) / 3600
+                  )}
+                  h
+                </span>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Pending Tasks
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Grade Math assignments for Grade 10-A
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Prepare quiz for Physics class
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Update attendance records
-                  </span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Memory Usage
+                </span>
+                <span className="text-sm font-medium text-blue-600">
+                  {Math.round(dashboardData?.systemHealth?.memoryUsage || 0)}MB
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Active Connections
+                </span>
+                <span className="text-sm font-medium text-purple-600">
+                  {dashboardData?.systemHealth?.activeConnections || 0}
+                </span>
               </div>
             </div>
           </div>
-        );
-
-      case "student":
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Today's Schedule
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Mathematics
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Room 101
-                    </p>
-                  </div>
-                  <span className="text-sm text-blue-600 dark:text-blue-400">
-                    9:00 AM
-                  </span>
+        </div>
+      );
+    } else if (role === "teacher") {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ActivityCard
+            title="Today's Schedule"
+            items={dashboardData?.todaySchedule || []}
+            emptyMessage="No classes scheduled for today"
+            renderItem={(schedule: any, index: number) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+              >
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {schedule.subject?.name || "Subject"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {schedule.class?.name || "Class"} -{" "}
+                    {schedule.class?.section || ""}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      English
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Room 205
-                    </p>
-                  </div>
-                  <span className="text-sm text-green-600 dark:text-green-400">
-                    10:30 AM
-                  </span>
+                <span className="text-sm text-blue-600 dark:text-blue-400">
+                  {schedule.startTime} - {schedule.endTime}
+                </span>
+              </div>
+            )}
+          />
+
+          <ActivityCard
+            title="Upcoming Exams"
+            items={dashboardData?.upcomingExams || []}
+            emptyMessage="No upcoming exams"
+            renderItem={(exam: any, index: number) => (
+              <div key={index} className="flex items-center space-x-3">
+                <Calendar className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {exam.title}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {exam.subject?.name} -{" "}
+                    {new Date(exam.startDate).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Grades
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Mathematics Quiz
-                  </span>
-                  <span className="text-sm font-medium text-green-600">A+</span>
+            )}
+          />
+        </div>
+      );
+    } else if (role === "student") {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ActivityCard
+            title="Today's Schedule"
+            items={dashboardData?.todaySchedule || []}
+            emptyMessage="No classes scheduled for today"
+            renderItem={(schedule: any, index: number) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+              >
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {schedule.subject?.name || "Subject"}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {schedule.teacher?.firstName} {schedule.teacher?.lastName}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Physics Lab Report
-                  </span>
-                  <span className="text-sm font-medium text-blue-600">B+</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    English Essay
-                  </span>
-                  <span className="text-sm font-medium text-green-600">A</span>
-                </div>
+                <span className="text-sm text-blue-600 dark:text-blue-400">
+                  {schedule.startTime}
+                </span>
               </div>
-            </div>
-          </div>
-        );
+            )}
+          />
 
-      default:
-        return null;
+          <ActivityCard
+            title="Recent Grades"
+            items={dashboardData?.recentGrades || []}
+            emptyMessage="No recent grades"
+            renderItem={(grade: unknown, index: number) => (
+              <div key={index} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {grade.exam?.title}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {grade.subject?.name}
+                  </p>
+                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    grade.grade === "A"
+                      ? "text-green-600"
+                      : grade.grade === "B"
+                      ? "text-blue-600"
+                      : grade.grade === "C"
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {grade.grade} ({grade.percentage}%)
+                </span>
+              </div>
+            )}
+          />
+        </div>
+      );
     }
+
+    return null;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow p-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-md p-6 text-white">
         <h1 className="text-2xl font-bold">{getWelcomeMessage()}</h1>
         <p className="mt-2 opacity-90">
           Welcome to your school management dashboard. Here's what's happening
@@ -349,7 +459,7 @@ export const Dashboard: React.FC = () => {
       {getRoleSpecificContent()}
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Quick Actions
         </h3>

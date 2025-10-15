@@ -3,9 +3,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Layout } from "../components/Layout/Layout";
 import { Login } from "../pages/Login";
+import { Signup } from "../pages/Signup";
 import { Dashboard } from "../pages/Dashboard";
+import { AnalyticsDashboard } from "../pages/Analytics/AnalyticsDashboard";
+import { TenantManagement } from "../pages/Tenants/TenantManagement";
 import { Students } from "../pages/Students/Students";
 import { Subjects } from "../pages/Subjects/Subjects";
+import { CreateUser } from "../pages/Users/CreateUser";
+import { UserManagement } from "../pages/Users/UserManagement";
+import { AuditDashboard } from "../pages/Audit/AuditDashboard";
+import { RoleBasedComponent } from "../components/RoleBasedComponent";
+import { AuthFallback } from "../components/Fallback/AuthFallback";
 
 // Placeholder components for missing pages
 const Tenants = () => (
@@ -14,9 +22,16 @@ const Tenants = () => (
     <p>Coming soon...</p>
   </div>
 );
-const Users = () => (
+// System Administration Components
+const SystemTenants = () => (
   <div className="p-6">
-    <h1 className="text-2xl font-bold">Users Management</h1>
+    <h1 className="text-2xl font-bold">System Tenant Management</h1>
+    <p>Coming soon...</p>
+  </div>
+);
+const SystemUsers = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">System User Management</h1>
     <p>Coming soon...</p>
   </div>
 );
@@ -72,27 +87,45 @@ const Settings = () => (
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { user, loading } = useAuth();
+  try {
+    const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      );
+    }
+
+    if (!user) return <Navigate to="/login" />;
+    return <>{children}</>;
+  } catch (error) {
+    console.error("Auth context error in ProtectedRoute:", error);
+    return <Navigate to="/login" />;
   }
-
-  if (!user) return <Navigate to="/login" />;
-  return <>{children}</>;
 };
 
 export const AppRoutes: React.FC = () => {
-  const { user } = useAuth();
+  // Safely get user with error handling
+  let user = null;
+  let authContextAvailable = false;
+
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+    authContextAvailable = true;
+  } catch (error) {
+    console.error("Auth context not available in AppRoutes:", error);
+    // Return fallback component when auth context is not available
+    return <AuthFallback />;
+  }
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         <Route
           path="/*"
@@ -101,13 +134,77 @@ export const AppRoutes: React.FC = () => {
               <Layout>
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/analytics" element={<AnalyticsDashboard />} />
 
-                  {/* Admin & Tenant Admin Routes */}
+                  {/* System Administration Routes */}
+                  <Route
+                    path="/system/tenants"
+                    element={
+                      <RoleBasedComponent
+                        requiredRoles={["super_admin", "manager"]}
+                      >
+                        <TenantManagement />
+                      </RoleBasedComponent>
+                    }
+                  />
+                  <Route
+                    path="/system/users"
+                    element={
+                      <RoleBasedComponent
+                        requiredRoles={["super_admin", "manager"]}
+                      >
+                        <SystemUsers />
+                      </RoleBasedComponent>
+                    }
+                  />
+                  <Route
+                    path="/system/audit"
+                    element={
+                      <RoleBasedComponent
+                        requiredRoles={["super_admin", "manager"]}
+                      >
+                        <AuditDashboard />
+                      </RoleBasedComponent>
+                    }
+                  />
+
+                  {/* User Management Routes */}
+                  <Route
+                    path="/users"
+                    element={
+                      <RoleBasedComponent
+                        requiredRoles={[
+                          "super_admin",
+                          "manager",
+                          "admin",
+                          "tenant_admin",
+                        ]}
+                      >
+                        <UserManagement />
+                      </RoleBasedComponent>
+                    }
+                  />
+                  <Route
+                    path="/users/create"
+                    element={
+                      <RoleBasedComponent
+                        requiredRoles={[
+                          "super_admin",
+                          "manager",
+                          "admin",
+                          "tenant_admin",
+                        ]}
+                      >
+                        <CreateUser />
+                      </RoleBasedComponent>
+                    }
+                  />
+
+                  {/* Legacy Admin & Tenant Admin Routes */}
                   {(user?.role === "admin" ||
                     user?.role === "tenant_admin") && (
                     <>
                       <Route path="/tenants" element={<Tenants />} />
-                      <Route path="/users" element={<Users />} />
                     </>
                   )}
 

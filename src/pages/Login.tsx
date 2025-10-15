@@ -4,11 +4,10 @@ import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/UI/Button";
 import { Input } from "../components/UI/Input";
-import { Select } from "../components/UI/Select";
-import { LoginForm, UserRole } from "../types";
+import { LoginForm } from "../types";
 
 export const Login: React.FC = () => {
-  const { user, signIn, switchRole } = useAuth();
+  const { user, signIn } = useAuth();
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
     password: "",
@@ -16,7 +15,6 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [demoMode, setDemoMode] = useState(false);
 
   // Redirect if already logged in
   if (user) {
@@ -30,15 +28,12 @@ export const Login: React.FC = () => {
 
     try {
       await signIn(formData);
-    } catch (err: any) {
-      setError(err.message || "Login failed");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Login failed";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = (role: UserRole) => {
-    switchRole(role);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,14 +42,6 @@ export const Login: React.FC = () => {
       [e.target.name]: e.target.value,
     }));
   };
-
-  const demoRoles = [
-    { value: "admin", label: "System Admin" },
-    { value: "tenant_admin", label: "School Admin" },
-    { value: "teacher", label: "Teacher" },
-    { value: "student", label: "Student" },
-    { value: "parent", label: "Parent" },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -68,169 +55,100 @@ export const Login: React.FC = () => {
             School Management System
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Sign in to your account or try the demo
+            Sign in to your account
           </p>
         </div>
 
-        {/* Demo Mode Toggle */}
-        <div className="flex items-center justify-center space-x-4">
-          <button
-            onClick={() => setDemoMode(false)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              !demoMode
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Login
-          </button>
-          <button
-            onClick={() => setDemoMode(true)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              demoMode
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Demo Mode
-          </button>
-        </div>
-
         <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-8">
-          {demoMode ? (
-            /* Demo Mode */
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                  Try Different Roles
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  Experience the system from different user perspectives. No
-                  registration required!
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
                 </p>
               </div>
+            )}
 
-              <div className="space-y-3">
-                {demoRoles.map((role) => (
-                  <button
-                    key={role.value}
-                    onClick={() => handleDemoLogin(role.value as UserRole)}
-                    className="w-full flex items-center justify-between p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {role.label}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {role.value}@demo.com
-                      </p>
-                    </div>
-                    <div className="text-blue-600 dark:text-blue-400">
-                      Try Now →
-                    </div>
-                  </button>
-                ))}
-              </div>
+            <Input
+              label="Email Address"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              placeholder="Enter your email"
+            />
 
-              <div className="text-center">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Demo mode uses mock data and doesn't require a backend
-                  connection
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* Login Form */
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
-                  <p className="text-sm text-red-600 dark:text-red-400">
-                    {error}
-                  </p>
-                </div>
-              )}
-
+            <div className="relative">
               <Input
-                label="Email Address"
-                type="email"
-                name="email"
-                value={formData.email}
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
                 required
-                placeholder="Enter your email"
+                placeholder="Enter your password"
               />
-
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
-                  >
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <Link
-                    to="/forgot-password"
-                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                loading={loading}
-                className="w-full"
-                size="lg"
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                Sign In
-              </Button>
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
 
-              <div className="text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/register"
-                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    Sign up
-                  </Link>
-                </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
+                >
+                  Remember me
+                </label>
               </div>
-            </form>
-          )}
+
+              <div className="text-sm">
+                <Link
+                  to="/forgot-password"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full"
+              size="lg"
+            >
+              Sign In
+            </Button>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{" "}
+                <Link
+                  to="/signup"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </form>
         </div>
 
         {/* Footer */}
