@@ -1,0 +1,418 @@
+import {
+  User,
+  Tenant,
+  Subject,
+  Class,
+  Student,
+  Attendance,
+  Exam,
+  Grade,
+  Timetable,
+  Fee,
+  ApiResponse,
+  PaginatedResponse,
+  LoginForm,
+  RegisterForm,
+  DashboardStats,
+} from "../types";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/v1";
+
+class ApiService {
+  private getHeaders(): HeadersInit {
+    const token = localStorage.getItem("token");
+    const tenant = localStorage.getItem("tenant");
+
+    return {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...(tenant && { "X-Tenant-ID": tenant }),
+    };
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config: RequestInit = {
+      headers: this.getHeaders(),
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "API request failed");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("API Error:", error);
+      throw error;
+    }
+  }
+
+  // Authentication
+  async login(
+    credentials: LoginForm
+  ): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
+    return this.request("/users/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(
+    userData: RegisterForm
+  ): Promise<ApiResponse<{ user: User; token: string; refreshToken: string }>> {
+    return this.request("/users/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async logout(): Promise<ApiResponse<null>> {
+    return this.request("/users/logout", {
+      method: "POST",
+    });
+  }
+
+  async getCurrentUser(): Promise<ApiResponse<User>> {
+    return this.request("/users/me");
+  }
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<ApiResponse<null>> {
+    return this.request("/users/change-password", {
+      method: "PATCH",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  // Users
+  async getUsers(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<User>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/users${queryString}`);
+  }
+
+  async getUserById(id: string): Promise<ApiResponse<User>> {
+    return this.request(`/users/${id}`);
+  }
+
+  async updateUser(
+    id: string,
+    userData: Partial<User>
+  ): Promise<ApiResponse<User>> {
+    return this.request(`/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/users/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Tenants
+  async getTenants(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Tenant>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/tenants${queryString}`);
+  }
+
+  async createTenant(
+    tenantData: Partial<Tenant>
+  ): Promise<ApiResponse<Tenant>> {
+    return this.request("/tenants", {
+      method: "POST",
+      body: JSON.stringify(tenantData),
+    });
+  }
+
+  async updateTenant(
+    id: string,
+    tenantData: Partial<Tenant>
+  ): Promise<ApiResponse<Tenant>> {
+    return this.request(`/tenants/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(tenantData),
+    });
+  }
+
+  // Subjects
+  async getSubjects(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Subject>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/subjects${queryString}`);
+  }
+
+  async createSubject(
+    subjectData: Partial<Subject>
+  ): Promise<ApiResponse<Subject>> {
+    return this.request("/subjects", {
+      method: "POST",
+      body: JSON.stringify(subjectData),
+    });
+  }
+
+  async updateSubject(
+    id: string,
+    subjectData: Partial<Subject>
+  ): Promise<ApiResponse<Subject>> {
+    return this.request(`/subjects/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(subjectData),
+    });
+  }
+
+  async deleteSubject(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/subjects/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Classes
+  async getClasses(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Class>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/classes${queryString}`);
+  }
+
+  async createClass(classData: Partial<Class>): Promise<ApiResponse<Class>> {
+    return this.request("/classes", {
+      method: "POST",
+      body: JSON.stringify(classData),
+    });
+  }
+
+  async updateClass(
+    id: string,
+    classData: Partial<Class>
+  ): Promise<ApiResponse<Class>> {
+    return this.request(`/classes/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(classData),
+    });
+  }
+
+  async deleteClass(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/classes/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Students
+  async getStudents(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Student>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/students${queryString}`);
+  }
+
+  async createStudent(
+    studentData: Partial<Student>
+  ): Promise<ApiResponse<Student>> {
+    return this.request("/students", {
+      method: "POST",
+      body: JSON.stringify(studentData),
+    });
+  }
+
+  async updateStudent(
+    id: string,
+    studentData: Partial<Student>
+  ): Promise<ApiResponse<Student>> {
+    return this.request(`/students/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(studentData),
+    });
+  }
+
+  async deleteStudent(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/students/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Attendance
+  async getAttendance(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Attendance>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/attendance${queryString}`);
+  }
+
+  async createAttendance(
+    attendanceData: Partial<Attendance>
+  ): Promise<ApiResponse<Attendance>> {
+    return this.request("/attendance", {
+      method: "POST",
+      body: JSON.stringify(attendanceData),
+    });
+  }
+
+  async updateAttendance(
+    id: string,
+    attendanceData: Partial<Attendance>
+  ): Promise<ApiResponse<Attendance>> {
+    return this.request(`/attendance/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(attendanceData),
+    });
+  }
+
+  // Exams
+  async getExams(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Exam>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/exams${queryString}`);
+  }
+
+  async createExam(examData: Partial<Exam>): Promise<ApiResponse<Exam>> {
+    return this.request("/exams", {
+      method: "POST",
+      body: JSON.stringify(examData),
+    });
+  }
+
+  async updateExam(
+    id: string,
+    examData: Partial<Exam>
+  ): Promise<ApiResponse<Exam>> {
+    return this.request(`/exams/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(examData),
+    });
+  }
+
+  async deleteExam(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/exams/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Grades
+  async getGrades(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Grade>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/grades${queryString}`);
+  }
+
+  async createGrade(gradeData: Partial<Grade>): Promise<ApiResponse<Grade>> {
+    return this.request("/grades", {
+      method: "POST",
+      body: JSON.stringify(gradeData),
+    });
+  }
+
+  async updateGrade(
+    id: string,
+    gradeData: Partial<Grade>
+  ): Promise<ApiResponse<Grade>> {
+    return this.request(`/grades/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(gradeData),
+    });
+  }
+
+  // Timetables
+  async getTimetables(
+    params?: Record<string, any>
+  ): Promise<PaginatedResponse<Timetable>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/timetables${queryString}`);
+  }
+
+  async createTimetable(
+    timetableData: Partial<Timetable>
+  ): Promise<ApiResponse<Timetable>> {
+    return this.request("/timetables", {
+      method: "POST",
+      body: JSON.stringify(timetableData),
+    });
+  }
+
+  async updateTimetable(
+    id: string,
+    timetableData: Partial<Timetable>
+  ): Promise<ApiResponse<Timetable>> {
+    return this.request(`/timetables/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(timetableData),
+    });
+  }
+
+  async deleteTimetable(id: string): Promise<ApiResponse<null>> {
+    return this.request(`/timetables/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Fees
+  async getFees(
+    params?: Record<string, unknown>
+  ): Promise<PaginatedResponse<Fee>> {
+    const queryString = params
+      ? `?${new URLSearchParams(params).toString()}`
+      : "";
+    return this.request(`/fees${queryString}`);
+  }
+
+  async createFee(feeData: Partial<Fee>): Promise<ApiResponse<Fee>> {
+    return this.request("/fees", {
+      method: "POST",
+      body: JSON.stringify(feeData),
+    });
+  }
+
+  async updateFee(
+    id: string,
+    feeData: Partial<Fee>
+  ): Promise<ApiResponse<Fee>> {
+    return this.request(`/fees/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(feeData),
+    });
+  }
+
+  // Dashboard
+  async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
+    return this.request("/dashboard/stats");
+  }
+}
+
+export const apiService = new ApiService();
+export default apiService;
