@@ -1,14 +1,25 @@
 import { useState, useCallback } from "react";
 import { useApp } from "../contexts/AppContext";
 import { apiService } from "../services/api";
+import {
+  User,
+  Tenant,
+  Subject,
+  Class,
+  Student,
+  Exam,
+  RegisterForm,
+  DashboardStats,
+} from "../types";
 
 export const useApi = () => {
   const { dispatch } = useApp();
   const [error, setError] = useState<string | null>(null);
 
   const handleError = useCallback(
-    (error: any) => {
-      const message = error?.message || "An error occurred";
+    (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
       setError(message);
       dispatch({
         type: "ADD_NOTIFICATION",
@@ -36,7 +47,7 @@ export const useApi = () => {
 
   // Users
   const fetchUsers = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -63,7 +74,7 @@ export const useApi = () => {
   );
 
   const createUser = useCallback(
-    async (userData: any) => {
+    async (userData: RegisterForm) => {
       try {
         const response = await apiService.register(userData);
         dispatch({ type: "ADD_USER", payload: response.data.user });
@@ -78,7 +89,7 @@ export const useApi = () => {
   );
 
   const updateUser = useCallback(
-    async (id: string, userData: any) => {
+    async (id: string, userData: Partial<User>) => {
       try {
         const response = await apiService.updateUser(id, userData);
         dispatch({ type: "UPDATE_USER", payload: response.data });
@@ -108,7 +119,7 @@ export const useApi = () => {
 
   // Tenants
   const fetchTenants = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -135,7 +146,7 @@ export const useApi = () => {
   );
 
   const createTenant = useCallback(
-    async (tenantData: any) => {
+    async (tenantData: Partial<Tenant>) => {
       try {
         const response = await apiService.createTenant(tenantData);
         handleSuccess("Tenant created successfully");
@@ -150,7 +161,7 @@ export const useApi = () => {
 
   // Subjects
   const fetchSubjects = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -177,7 +188,7 @@ export const useApi = () => {
   );
 
   const createSubject = useCallback(
-    async (subjectData: any) => {
+    async (subjectData: Partial<Subject>) => {
       try {
         const response = await apiService.createSubject(subjectData);
         dispatch({ type: "ADD_SUBJECT", payload: response.data });
@@ -192,7 +203,7 @@ export const useApi = () => {
   );
 
   const updateSubject = useCallback(
-    async (id: string, subjectData: any) => {
+    async (id: string, subjectData: Partial<Subject>) => {
       try {
         const response = await apiService.updateSubject(id, subjectData);
         dispatch({ type: "UPDATE_SUBJECT", payload: response.data });
@@ -222,7 +233,7 @@ export const useApi = () => {
 
   // Classes
   const fetchClasses = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -249,7 +260,7 @@ export const useApi = () => {
   );
 
   const createClass = useCallback(
-    async (classData: any) => {
+    async (classData: Partial<Class>) => {
       try {
         const response = await apiService.createClass(classData);
         dispatch({ type: "ADD_CLASS", payload: response.data });
@@ -264,7 +275,7 @@ export const useApi = () => {
   );
 
   const updateClass = useCallback(
-    async (id: string, classData: any) => {
+    async (id: string, classData: Partial<Class>) => {
       try {
         const response = await apiService.updateClass(id, classData);
         dispatch({ type: "UPDATE_CLASS", payload: response.data });
@@ -294,7 +305,7 @@ export const useApi = () => {
 
   // Students
   const fetchStudents = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -321,7 +332,7 @@ export const useApi = () => {
   );
 
   const createStudent = useCallback(
-    async (studentData: any) => {
+    async (studentData: Partial<Student>) => {
       try {
         const response = await apiService.createStudent(studentData);
         dispatch({ type: "ADD_STUDENT", payload: response.data });
@@ -336,7 +347,7 @@ export const useApi = () => {
   );
 
   const updateStudent = useCallback(
-    async (id: string, studentData: any) => {
+    async (id: string, studentData: Partial<Student>) => {
       try {
         const response = await apiService.updateStudent(id, studentData);
         dispatch({ type: "UPDATE_STUDENT", payload: response.data });
@@ -366,7 +377,7 @@ export const useApi = () => {
 
   // Attendance
   const fetchAttendance = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -394,7 +405,7 @@ export const useApi = () => {
 
   // Exams
   const fetchExams = useCallback(
-    async (params?: Record<string, any>) => {
+    async (params?: Record<string, string>) => {
       try {
         dispatch({
           type: "SET_LOADING",
@@ -421,7 +432,7 @@ export const useApi = () => {
   );
 
   const createExam = useCallback(
-    async (examData: unknown) => {
+    async (examData: Partial<Exam>) => {
       try {
         const response = await apiService.createExam(examData);
         dispatch({ type: "ADD_EXAM", payload: response.data });
@@ -436,7 +447,7 @@ export const useApi = () => {
   );
 
   const updateExam = useCallback(
-    async (id: string, examData: unknown) => {
+    async (id: string, examData: Partial<Exam>) => {
       try {
         const response = await apiService.updateExam(id, examData);
         dispatch({ type: "UPDATE_EXAM", payload: response.data });
@@ -472,7 +483,10 @@ export const useApi = () => {
         payload: { key: "dashboard", value: true },
       });
       const response = await apiService.getDashboard();
-      dispatch({ type: "SET_DASHBOARD_STATS", payload: response.data });
+      dispatch({
+        type: "SET_DASHBOARD_STATS",
+        payload: response.data as DashboardStats,
+      });
     } catch (error) {
       handleError(error);
     } finally {

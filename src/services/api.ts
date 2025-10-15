@@ -13,7 +13,6 @@ import {
   PaginatedResponse,
   LoginForm,
   RegisterForm,
-  DashboardStats,
 } from "../types";
 
 const API_BASE_URL =
@@ -97,12 +96,14 @@ class ApiService {
 
   // Users
   async getUsers(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<User>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/users${queryString}`);
+    return this.request(`/users${queryString}`) as Promise<
+      PaginatedResponse<User>
+    >;
   }
 
   async getUserById(id: string): Promise<ApiResponse<User>> {
@@ -127,12 +128,14 @@ class ApiService {
 
   // Tenants
   async getTenants(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Tenant>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/tenants${queryString}`);
+    return this.request(`/tenants${queryString}`) as Promise<
+      PaginatedResponse<Tenant>
+    >;
   }
 
   async createTenant(
@@ -156,12 +159,14 @@ class ApiService {
 
   // Subjects
   async getSubjects(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Subject>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/subjects${queryString}`);
+    return this.request(`/subjects${queryString}`) as Promise<
+      PaginatedResponse<Subject>
+    >;
   }
 
   async createSubject(
@@ -191,12 +196,14 @@ class ApiService {
 
   // Classes
   async getClasses(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Class>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/classes${queryString}`);
+    return this.request(`/classes${queryString}`) as Promise<
+      PaginatedResponse<Class>
+    >;
   }
 
   async createClass(classData: Partial<Class>): Promise<ApiResponse<Class>> {
@@ -224,12 +231,14 @@ class ApiService {
 
   // Students
   async getStudents(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Student>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/students${queryString}`);
+    return this.request(`/students${queryString}`) as Promise<
+      PaginatedResponse<Student>
+    >;
   }
 
   async createStudent(
@@ -259,12 +268,14 @@ class ApiService {
 
   // Attendance
   async getAttendance(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Attendance>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/attendance${queryString}`);
+    return this.request(`/attendance${queryString}`) as Promise<
+      PaginatedResponse<Attendance>
+    >;
   }
 
   async createAttendance(
@@ -288,12 +299,14 @@ class ApiService {
 
   // Exams
   async getExams(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Exam>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/exams${queryString}`);
+    return this.request(`/exams${queryString}`) as Promise<
+      PaginatedResponse<Exam>
+    >;
   }
 
   async createExam(examData: Partial<Exam>): Promise<ApiResponse<Exam>> {
@@ -321,12 +334,14 @@ class ApiService {
 
   // Grades
   async getGrades(
-    params?: Record<string, any>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Grade>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/grades${queryString}`);
+    return this.request(`/grades${queryString}`) as Promise<
+      PaginatedResponse<Grade>
+    >;
   }
 
   async createGrade(gradeData: Partial<Grade>): Promise<ApiResponse<Grade>> {
@@ -348,12 +363,14 @@ class ApiService {
 
   // Timetables
   async getTimetables(
-    params?: Record<string, unknown>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Timetable>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/timetables${queryString}`);
+    return this.request(`/timetables${queryString}`) as Promise<
+      PaginatedResponse<Timetable>
+    >;
   }
 
   async createTimetable(
@@ -383,12 +400,14 @@ class ApiService {
 
   // Fees
   async getFees(
-    params?: Record<string, unknown>
+    params?: Record<string, string>
   ): Promise<PaginatedResponse<Fee>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
-    return this.request(`/fees${queryString}`);
+    return this.request(`/fees${queryString}`) as Promise<
+      PaginatedResponse<Fee>
+    >;
   }
 
   async createFee(feeData: Partial<Fee>): Promise<ApiResponse<Fee>> {
@@ -409,7 +428,7 @@ class ApiService {
   }
 
   // Dashboard
-  async getDashboard(): Promise<ApiResponse<any>> {
+  async getDashboard(): Promise<ApiResponse<unknown>> {
     return this.request("/dashboard");
   }
 
@@ -422,11 +441,11 @@ class ApiService {
     return this.request("/users/my-created-users");
   }
 
-  async getRoleHierarchy(): Promise<ApiResponse<any>> {
+  async getRoleHierarchy(): Promise<ApiResponse<unknown>> {
     return this.request("/users/role-hierarchy");
   }
 
-  async bulkCreateUsers(users: any[]): Promise<ApiResponse<any>> {
+  async bulkCreateUsers(users: unknown[]): Promise<ApiResponse<unknown>> {
     return this.request("/users/bulk-create", {
       method: "POST",
       body: JSON.stringify({ users }),
@@ -444,21 +463,25 @@ class ApiService {
   }
 
   // Audit Management
-  async getAuditLogs(params?: Record<string, any>): Promise<ApiResponse<any>> {
+  async getAuditLogs(
+    params?: Record<string, string>
+  ): Promise<ApiResponse<unknown>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
     return this.request(`/audit/logs${queryString}`);
   }
 
-  async getAuditStats(params?: Record<string, any>): Promise<ApiResponse<any>> {
+  async getAuditStats(
+    params?: Record<string, string>
+  ): Promise<ApiResponse<unknown>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
     return this.request(`/audit/stats${queryString}`);
   }
 
-  async exportAuditLogs(params?: Record<string, any>): Promise<any> {
+  async exportAuditLogs(params?: Record<string, string>): Promise<unknown> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
@@ -468,8 +491,8 @@ class ApiService {
   }
 
   async getCriticalEvents(
-    params?: Record<string, any>
-  ): Promise<ApiResponse<any>> {
+    params?: Record<string, string>
+  ): Promise<ApiResponse<unknown>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
@@ -478,8 +501,8 @@ class ApiService {
 
   async getUserActivity(
     userId: string,
-    params?: Record<string, any>
-  ): Promise<ApiResponse<any>> {
+    params?: Record<string, string>
+  ): Promise<ApiResponse<unknown>> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";
@@ -487,7 +510,10 @@ class ApiService {
   }
 
   // Generic API methods
-  async get(endpoint: string, params?: Record<string, any>): Promise<any> {
+  async get(
+    endpoint: string,
+    params?: Record<string, string>
+  ): Promise<unknown> {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : "";

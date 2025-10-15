@@ -21,7 +21,7 @@ export interface Permission {
   resource: string;
   actions: string[];
   scope: "global" | "tenant" | "own";
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>;
 }
 
 export interface AuditLog {
@@ -242,10 +242,10 @@ export interface DashboardStats {
     activeConnections: number;
   };
   recentActivities?: Activity[];
-  todaySchedule?: any[];
-  upcomingExams?: any[];
-  pendingGrades?: any[];
-  recentAttendance?: any[];
+  todaySchedule?: unknown[];
+  upcomingExams?: unknown[];
+  pendingGrades?: unknown[];
+  recentAttendance?: unknown[];
   recentGrades?: unknown[];
   feeStatus?: {
     totalDue: number;
